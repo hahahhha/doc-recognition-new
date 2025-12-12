@@ -21,4 +21,5 @@ if __name__ == '__main__':
         ocr_result.insert(bbox, text, confidence)
         # print(text)
     print('ocr created\n')
-    parse_table(img, ocr_result)
+    res = parse_table('./../../scan_images/upd1_page1.jpg', ocr_result)
+    print(*res[:100], sep='\n')
