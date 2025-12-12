@@ -1,1 +1,1 @@
-from .parse_header import find_text_by_title_bbox
+from .parse_header import __find_text_by_title_bbox

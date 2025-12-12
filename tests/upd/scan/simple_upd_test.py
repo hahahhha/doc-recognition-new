@@ -2,11 +2,11 @@ import easyocr
 import cv2
 import numpy as np
 from src.upd.scan.ocr_result import OcrResult
-from src.upd.scan.parse_header import find_seller_and_buyer_data
+from src.upd.scan.parse_header import parse_header_to_dict
 
 
 def simple_upd_test(ocr_res):
-    for k, v in find_seller_and_buyer_data(ocr_res).items():
+    for k, v in parse_header_to_dict(ocr_res).items():
         print(f'{k}: {v}')
 
 
