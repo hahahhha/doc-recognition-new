@@ -1,5 +1,6 @@
 import re
 import cv2
+import numpy as np
 from img2table import document
 from PIL import Image
 from io import BytesIO
@@ -52,8 +53,7 @@ def get_cells_list(ocr_result: OcrResult, table, img_delta_y: int) -> list:
     return result_table
 
 
-def parse_table(img_src: str, ocr_result: OcrResult):
-    img = cv2.imread(img_src)
+def parse_table_to_dict(img: np.ndarray, ocr_result: OcrResult):
     border_y = find_table_top_border(ocr_result)
     h, w = img.shape[:2]
     cropped_img = img[border_y: h, 0 : w]
