@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from src.upd.scan.ocr_result import OcrResult
 from src.upd.scan.parse_header import parse_header_to_dict
-
+from src.upd.scan.parse_table import parse_table
 
 def simple_upd_test(ocr_res):
     for k, v in parse_header_to_dict(ocr_res).items():
@@ -21,4 +21,4 @@ if __name__ == '__main__':
         ocr_result.insert(bbox, text, confidence)
         # print(text)
     print('ocr created\n')
-    simple_upd_test(ocr_result)
+    parse_table(img, ocr_result)
