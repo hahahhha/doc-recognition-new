@@ -1,9 +1,9 @@
 import os
 import easyocr
 import numpy as np
-from ..scan.parse_header import parse_header_to_dict
-from ..scan.parse_table import parse_table_to_dict
-from ..scan.ocr_result import OcrResult
+from .parse_header import parse_header_to_dict
+from .parse_table import parse_table_to_dict
+from .ocr_result import OcrResult
 
 
 def parse_scan_dict(img: np.ndarray) -> dict:
@@ -11,7 +11,7 @@ def parse_scan_dict(img: np.ndarray) -> dict:
 
     # Создайте директорию если нет
     os.makedirs(model_dir, exist_ok=True)
-    reader = easyocr.Reader(['ru'], download_enabled=True, model_storage_directory=model_dir)
+    reader = easyocr.Reader(['ru'], download_enabled=True, model_storage_directory=model_dir, verbose=False)
     ocr = reader.readtext(img)
     ocr_result = OcrResult()
     for bbox, text, confidence in ocr:

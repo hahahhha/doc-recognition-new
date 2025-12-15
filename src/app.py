@@ -2,8 +2,8 @@ import cv2
 import tempfile
 import os
 from flask import Flask, request, jsonify
-from ..upd.scan.parse_scan import parse_scan_dict
 
+from upd import parse_scan_dict
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -65,6 +65,7 @@ def create_app() -> Flask:
         except PermissionError as e:
             return jsonify({'error': f'permission denied: {str(e)}'}), 500
         except Exception as e:
+            print(e.args)
             return jsonify({'error': f'processing failed: {str(e)}'}), 500
 
     return app
