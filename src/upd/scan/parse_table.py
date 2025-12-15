@@ -5,7 +5,7 @@ from img2table import document
 from PIL import Image
 from io import BytesIO
 
-from src.upd.scan.ocr_result import OcrResult
+from ..scan.ocr_result import OcrResult
 
 
 # величина отступа от границы шапки документа и таблицы
