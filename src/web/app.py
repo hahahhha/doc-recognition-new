@@ -2,7 +2,7 @@ import cv2
 import tempfile
 import os
 from flask import Flask, request, jsonify
-from src.upd.scan.parse_scan import parse_scan_dict
+from ..upd.scan.parse_scan import parse_scan_dict
 
 
 def create_app() -> Flask:
