@@ -12,3 +12,7 @@ class OcrResult:
 
     def __iter__(self):
         return iter(self.__ocr_results)
+
+    def print(self, confidience = False):
+        for bbox, text, conf in self.__ocr_results:
+            print(bbox, text, text if confidience else '')
