@@ -17,7 +17,7 @@ def create_app() -> Flask:
         return jsonify({'status': 'ok'})
 
     @app.route('/scan', methods=['POST'])  # Изменено с GET на POST
-    def scan():
+    def scan_by_img():
         if 'image' not in request.files:
             return jsonify({'error': 'no image part'}), 400
 
@@ -69,7 +69,7 @@ def create_app() -> Flask:
 
 
     @app.route('/scan', methods=['GET'])
-    def scan():
+    def scan_by_route():
         path_img = request.args['url']
         img = cv2.imread(path_img)
         parse_result = parse_scan_dict(img)

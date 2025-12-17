@@ -1,7 +1,7 @@
 import os
 import easyocr
 import numpy as np
-from .parse_header_old import parse_header_to_dict
+from .parse_header import parse_header_to_dict
 from .parse_table import parse_table_to_dict
 from .ocr_result import OcrResult
 
@@ -20,3 +20,5 @@ def parse_scan_dict(img: np.ndarray) -> dict:
     result = parse_header_to_dict(ocr_result)
     result["table"] = parse_table_to_dict(img, ocr_result)
     return result
+
+

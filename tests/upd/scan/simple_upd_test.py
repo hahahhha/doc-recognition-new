@@ -1,4 +1,4 @@
-from src.upd.scan.parse_header_old import parse_header_to_dict
+from src.upd.scan.parse_header import parse_header_to_dict
 
 
 def simple_upd_test(ocr_res):
