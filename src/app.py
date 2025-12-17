@@ -18,7 +18,6 @@ def create_app() -> Flask:
 
     @app.route('/scan', methods=['POST'])  # Изменено с GET на POST
     def scan():
-        # Проверяем, есть ли файл в запросе
         if 'image' not in request.files:
             return jsonify({'error': 'no image part'}), 400
 
@@ -33,55 +32,47 @@ def create_app() -> Flask:
         file_ext = os.path.splitext(image_file.filename)[1].lower()
 
         if file_ext not in allowed_extensions:
-            return jsonify({'error': f'unsupported file type: {file_ext}'}), 400
+            return jsonify({'error': 'unsupported file extension'}), 400
 
-        with tempfile.NamedTemporaryFile(
-                suffix=file_ext,
-                dir=TEMP_FOLDER,  # Используем нашу папку
-                delete=False  # Не удалять сразу, чтобы cv2 успел прочитать
-        ) as tmp:
-            # Сохраняем файл
-            image_file.save(tmp.name)
-            temp_path = tmp.name
-        img = cv2.imread(temp_path)
+        # Создаем временный файл в безопасной директории
+        try:
+            with tempfile.NamedTemporaryFile(
+                    suffix=file_ext,
+                    dir=TEMP_FOLDER,  # Используем нашу папку
+                    delete=False  # Не удалять сразу, чтобы cv2 успел прочитать
+            ) as tmp:
+                # Сохраняем файл
+                image_file.save(tmp.name)
+                temp_path = tmp.name
 
-        if img is None:
-            return jsonify({'error': 'cannot read image file'}), 400
+            try:
+                # Читаем изображение
+                img = cv2.imread(temp_path)
 
-        # Обрабатываем изображение
+                if img is None:
+                    return jsonify({'error': 'cannot read image file'}), 400
+
+                # Обрабатываем изображение
+                parse_result = parse_scan_dict(img)
+                return jsonify(parse_result)
+
+            finally:
+                # Удаляем временный файл после обработки
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+
+        except PermissionError as e:
+            return jsonify({'error': f'permission denied: {str(e)}'}), 500
+        except Exception as e:
+            print(e.args)
+            return jsonify({'error': f'processing failed: {str(e)}'}), 500
+
+
+    @app.route('/scan', methods=['GET'])
+    def scan():
+        path_img = request.args['url']
+        img = cv2.imread(path_img)
         parse_result = parse_scan_dict(img)
         return jsonify(parse_result)
-        # Создаем временный файл в безопасной директории
-        # try:
-        #     with tempfile.NamedTemporaryFile(
-        #             suffix=file_ext,
-        #             dir=TEMP_FOLDER,  # Используем нашу папку
-        #             delete=False  # Не удалять сразу, чтобы cv2 успел прочитать
-        #     ) as tmp:
-        #         # Сохраняем файл
-        #         image_file.save(tmp.name)
-        #         temp_path = tmp.name
-        #
-        #     try:
-        #         # Читаем изображение
-        #         img = cv2.imread(temp_path)
-        #
-        #         if img is None:
-        #             return jsonify({'error': 'cannot read image file'}), 400
-        #
-        #         # Обрабатываем изображение
-        #         parse_result = parse_scan_dict(img)
-        #         return jsonify(parse_result)
-        #
-        #     finally:
-        #         # Удаляем временный файл после обработки
-        #         if os.path.exists(temp_path):
-        #             os.remove(temp_path)
-        #
-        # except PermissionError as e:
-        #     return jsonify({'error': f'permission denied: {str(e)}'}), 500
-        # except Exception as e:
-        #     print(e.args)
-        #     return jsonify({'error': f'processing failed: {str(e)}'}), 500
 
     return app
