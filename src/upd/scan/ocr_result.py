@@ -13,6 +13,6 @@ class OcrResult:
     def __iter__(self):
         return iter(self.__ocr_results)
 
-    def print(self, confidience = False):
+    def print(self, confidence = False, coordinates = False):
         for bbox, text, conf in self.__ocr_results:
-            print(bbox, text, text if confidience else '')
+            print(bbox if coordinates else '', text, text if confidence else '')

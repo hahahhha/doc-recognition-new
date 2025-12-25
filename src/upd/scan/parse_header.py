@@ -3,120 +3,180 @@ import re
 from .ocr_result import OcrResult
 from .data_parse_object import DataParseObject
 
-# насколько расширяются границы bbox при поиске текста
-extend_bbox_value = 5
+EXTEND_BBOX_VALUE = 5
 
-# переделать так, чтобы везде была проверка на ключи
-
+# основные названия полей для поиска за исключением адресов (их поиск происходит отдельно)
+# для распознавания тессерактом оставляю только одно слово
 parse_objects = [
-    DataParseObject("продавец", "продавец", "seller_name"),
-    DataParseObject("инн/кпп продавца", r"инн.*кпп\s*продавца", 'seller_inn/kpp'),
-    DataParseObject("грузоотправитель и его адрес", r"грузоотправитель\s*и\s*его\s*адрес", 'consignor_address'),
-    DataParseObject("грузополучатель и его адрес", r"грузополучатель\s*и\s*его\s*адрес", 'consignee_address'),
-    DataParseObject("к платежно-расчетному документу", r"к\s*платежно.*расчетному\s*документу", 'payment_document'),
-    DataParseObject("инн/кпп покупателя", r"инн.*кпп\s*покупателя", 'buyer_inn/kpp'),
-    DataParseObject("валюта: наименование, код", r"валюта.*\s*наименование.*\s*код", 'currency'),
-    DataParseObject("покупатель", r"^покупатель", "buyer_name")
+    DataParseObject("продавец", ["продавец"], "seller_name"),
+    DataParseObject("инн/кпп продавца", [r"продавца"], 'seller_inn/kpp'),
+    DataParseObject("грузоотправитель и его адрес", [r"грузоотправитель"], 'consignor_address'),
+    DataParseObject("грузополучатель и его адрес", [r"грузополучатель"], 'consignee_address'),
+    DataParseObject("к платежно-расчетному документу", [r"к\s*платежно"], 'payment_document'),
+    DataParseObject("инн/кпп покупателя", [r"покупателя"], 'buyer_inn/kpp'),
+    DataParseObject("валюта: наименование, код", [r"валюта"], 'currency'),
+    DataParseObject("покупатель", [r"покупатель"], "buyer_name")
 ]
 
+ADDRESS_PATTERNS = [r'адрес', r'апрес', r'адрее', r'апрее']
+STATUS_PATTERNS = [r'статус', r'статуе', r'етатуе', r'етатус']
 
-def __find_text_by_title_bbox(ocr_result: OcrResult, title_bbox: list) -> str:
-    p1, p2, p3, p4 = title_bbox
-    result_text = []
-    # нужна для проверки ниже чем продавец или выше
-    min_text_y_coord = 1e9
+
+def find_value_by_title_bbox(ocr_result: OcrResult, title_bbox: list) -> str:
+    title_right_x = title_bbox[1][0]
+    title_top_y = title_bbox[1][1]
+    title_bottom_y = title_bbox[2][1]
+
+    result = []
+
     for bbox, text, conf in ocr_result:
-        left_top = bbox[0]
-        right_bottom = bbox[2]
-        if left_top[0] > p2[0] and left_top[1] >= p1[1] - extend_bbox_value and right_bottom[1] <= p3[1] + extend_bbox_value:
-            result_text.append(text)
-            min_text_y_coord = min(min_text_y_coord, left_top[1])
+        cur_left_x = bbox[0][0]
+        cur_top_y = bbox[0][1]
+        cur_bottom_y = bbox[2][1]
+        if cur_left_x > title_right_x and cur_top_y >= title_top_y - EXTEND_BBOX_VALUE and cur_bottom_y <= title_bottom_y + EXTEND_BBOX_VALUE:
+            if text not in result and text != ' ':
+                result.append(text)
 
-    return ''.join(result_text)
-
-
-def __find_buyer_and_seller_address(ocr_result: OcrResult, buyer_seller_edge_y: int) -> list:
-    seller_address = ''
-    buyer_address = ''
-    for bbox, text, conf in ocr_result:
-        if re.search('^адрес:', text, re.IGNORECASE):
-            # print(f'edge: {buyer_seller_edge_y}, cur_y: {bbox[0][1]}')
-            value = __find_text_by_title_bbox(ocr_result, bbox)
-            if bbox[0][1] > buyer_seller_edge_y:
-                buyer_address += ' ' + value
-            else:
-                seller_address += ' ' + value
-    return [buyer_address, seller_address]
+    return ' '.join(result)
 
 
-def __find_seller_and_buyer_data(ocr_result: OcrResult):
-    """Поиск по принципу: от слова Продавец: (левый верхний угол зоны) до К платежно-расчентому документу (левый нижний угол)"""
-    result = dict(zip([po.json_field_title for po in parse_objects], ['' for _ in range(len(parse_objects))]))
-    buyer_areas_found = [bbox for bbox, text, c in ocr_result if re.search(r'покупатель', text, re.IGNORECASE)][0]
-    if not buyer_areas_found:
-        raise Exception("не удалось найти поле покупатель на скане упд")
-    print(f'buyer_area: {buyer_areas_found}')
-    buyer_top_y = buyer_areas_found[0][1]
-    for parse_obj in parse_objects:
-        for bbox, text, c in ocr_result:
-            # нашлось название поля, например инн/кпп покупателя и т.п.
-            if re.search(parse_obj.title_search_pattern, text, re.IGNORECASE):
-                field_value= __find_text_by_title_bbox(ocr_result, bbox)
-                result[parse_obj.json_field_title] = field_value
+def find_values(ocr_result: OcrResult) -> dict:
+    result = dict(zip(
+        [po.json_field_title for po in parse_objects],
+        ['not found' for _ in range(len(parse_objects))]
+    ))
 
-    buyer_address, seller_adders = __find_buyer_and_seller_address(ocr_result, buyer_top_y)
-    result['buyer_address'] = buyer_address
-    result['seller_address'] = seller_adders
+    for po in parse_objects:
+        for bbox, text, conf in ocr_result:
+            # нашли координаты названия поля
+            if any(re.search(pat, text, re.IGNORECASE) for pat in po.title_search_patterns):
+                result[po.json_field_title] = find_value_by_title_bbox(ocr_result, bbox)
+                # print(f'found field: {po.field_title} : {bbox}')
     return result
 
 
-def __get_data_from_name_and_address_line(data, key) -> dict:
-    print(f'key: {key}')
-    print(f'data: {data}')
-    print(f'key in data: {key in data}')
-    # тут ошибка
-    if key in data:
-        line = data[key]
-        if ',' in line:
-            print(line)
-            first_comma_ind = line.index(',')
-            return {
-                "name": line[:first_comma_ind],
-                "address": line[first_comma_ind + 1:]
-            }
+def get_consignor_or_consignee_data(parsed_data: dict, key: str) -> dict:
+    if key not in parsed_data:
         return {
-            "name": line,
+            "name": "not found",
+            "address": "not found"
+        }
+
+    # очистка из-за особенностей считывания
+    address = (parsed_data[key]
+               .replace('и', '', 1)
+               .replace('его', '', 1)
+               .replace('адрес', '', 1)
+               .strip())
+    first_comma = address.find(',')
+    if first_comma == -1:
+        return {
+            "name": address,
             "address": ""
         }
-    return {
-        "name": 'not found',
-        "address": 'not found'
+    name_part, address_part = address[:first_comma], address[first_comma + 1:]
+    # грузоотправитель
+    consignor = {
+        "name": name_part,
+        "address": address_part
     }
 
-def parse_header_to_dict(ocr_result: OcrResult):
-    """В будущем будет добавлна обработка nlp для более точных результатов"""
-    data = __find_seller_and_buyer_data(ocr_result)
+    return consignor
+
+
+def get_buyer_and_seller_address(ocr_result: OcrResult) -> tuple[str, str]:
+    address_title_bboxes = [bbox for bbox, text, c in ocr_result
+                            if any(re.search(pat, text, re.IGNORECASE) for pat in ADDRESS_PATTERNS)]
+    address_title_bboxes.sort(key=lambda b: b[0][1])
+    # print(*address_title_bboxes, sep='\n')
+    if len(address_title_bboxes) < 2:
+        return 'not found', 'not found'
+
+    seller_address = find_value_by_title_bbox(ocr_result, address_title_bboxes[0]).strip()
+    buyer_address = find_value_by_title_bbox(ocr_result, address_title_bboxes[-1]).strip()
+    return buyer_address, seller_address
+
+
+def get_currency(parsed_data: dict) -> dict:
+    # убираем лишние части, появившиеся из-за особенностей считывания
+    cleaned_line = parsed_data['currency']
+    if 'код' in cleaned_line:
+        cleaned_line = cleaned_line[cleaned_line.index('код') + len('код') : : ]
+    elif 'наименование' in cleaned_line:
+        cleaned_line = cleaned_line[cleaned_line.index('наименование') + len('наименование') : : ]
+    parts = cleaned_line.split(',')
+    # print(parts)
+    currency = {
+        "name": "not found",
+        "code": "not found"
+    }
+
+    if len(parts) >= 1:
+        currency['name'] = parts[0].strip().capitalize()
+    if len(parts) >= 2:
+        code = parts[1].strip()
+        if ' ' in code:
+            currency['code'] = code[ : code.index(' ')]
+        else:
+            currency['code'] = code
+    return currency
+
+
+def get_status(ocr_result: OcrResult) -> str:
+    status_bboxes = [bbox for bbox, text, c in ocr_result
+                   if any(re.search(pat, text, re.IGNORECASE) for pat in STATUS_PATTERNS)]
+    if len(status_bboxes) < 1:
+        return 'not found'
+    # ищем самый лево-верхний
+    status_bboxes.sort(key=lambda b: b[0])
+    found_status = []
+    status_bbox = status_bboxes[0]
+    for bbox, text, conf in ocr_result:
+        lt, rt, rb, lb = bbox
+        left_x = lt[0]
+        top_y = lt[1]
+        bottom_y = lb[1]
+        right_x = rt[0]
+        if left_x > status_bbox[1][0] and top_y > status_bbox[1][1] - 30 and bottom_y < status_bbox[1][1] + 30 and right_x - status_bbox[1][0] < 120:
+            found_status.append(text)
+
+    status_line = ''.join(found_status)
+    return ''.join([char for char in status_line if char.isdigit()])
+
+def parse_header_to_dict(ocr_result: OcrResult) -> dict:
+    result = find_values(ocr_result)
+    seller_inn_kpp = result["seller_inn/kpp"].split('/')
+
+    buyer_address, seller_address = get_buyer_and_seller_address(ocr_result)
+
     seller = {
-        "name": data['seller_name'],
-        "address": data['seller_address'],
-        "inn": '' if len(data['seller_inn/kpp'].split('/')) < 1 else data['seller_inn/kpp'].split('/')[0],
-        "kpp": '' if len(data['seller_inn/kpp'].split('/')) < 2 else data['seller_inn/kpp'].split('/')[1]
+        "name": result["seller_name"].strip(),
+        "address": seller_address.strip(),
+        "inn": 'not found' if not seller_inn_kpp else seller_inn_kpp[0].strip(),
+        "kpp": 'not found' if len(seller_inn_kpp) < 2 else seller_inn_kpp[1].strip()
     }
-    # print('seller done')
-    consignor = __get_data_from_name_and_address_line(data, 'consignor_address')
-    # print('consignor done')
-    consignee = __get_data_from_name_and_address_line(data, 'consignee_address')
-    # print('consignee done')
+
+    buyer_inn_kpp = result["buyer_inn/kpp"].split('/')
     buyer = {
-        "name": data['buyer_name'],
-        "address": data['buyer_address'],
-        "inn": '' if len(data['buyer_inn/kpp'].split('/')) < 1 else data['buyer_inn/kpp'].split('/')[0],
-        "kpp": '' if len(data['buyer_inn/kpp'].split('/')) < 2 else data['buyer_inn/kpp'].split('/')[1]
+        "name": result["buyer_name"].strip(),
+        "address": buyer_address.strip(),
+        "inn": "not found" if not buyer_inn_kpp else buyer_inn_kpp[0].strip(),
+        "kpp": "not found" if len(buyer_inn_kpp) < 2 else buyer_inn_kpp[1].strip()
     }
-    ocr_result.print()
-    return {
+
+    consignor = get_consignor_or_consignee_data(result, 'consignor_address')
+    consignee = get_consignor_or_consignee_data(result, 'consignee_address')
+
+    currency = get_currency(result)
+
+    status = get_status(ocr_result)
+
+    formatted = {
         "seller": seller,
         "consignor": consignor,
         "consignee": consignee,
-        "buyer": buyer
+        "buyer": buyer,
+        "currency": currency,
+        "status": status
     }
+    return formatted
