@@ -35,8 +35,7 @@ def get_tesseract_ocr_result(img: np.ndarray) -> OcrResult:
 def parse_scan_dict(img: np.ndarray) -> dict:
     ocr_result = get_tesseract_ocr_result(img)
     result = parse_header_to_dict(ocr_result)
-    # result["table"] = parse_table_to_dict(img, ocr_result)
-    result['table'] =[]
+    result["table"] = parse_table_to_dict(img, ocr_result)
     return result
 
 

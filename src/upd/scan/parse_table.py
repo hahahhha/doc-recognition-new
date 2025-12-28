@@ -40,7 +40,8 @@ def get_cells_list(ocr_result: OcrResult, table, img_delta_y: int) -> list:
                         and cell_x2 >= cur_mx_x and cell_y2 >= cur_mx_y:
                     if cell not in text_by_cell:
                         text_by_cell[cell] = []
-                    text_by_cell[cell].append(text)
+                    if text not in text_by_cell[cell]:
+                        text_by_cell[cell].append(text)
     result_table = []
     for key in text_by_cell:
         coords = [[key.bbox.x1, key.bbox.y1], [key.bbox.x2, key.bbox.y2]]
