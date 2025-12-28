@@ -1,7 +1,6 @@
 import cv2
 import easyocr
 import pytesseract
-import numpy as np
 import time
 import json
 
