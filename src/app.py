@@ -16,13 +16,19 @@ def create_app() -> Flask:
     def health():
         return jsonify({'status': 'ok'})
 
+    @app.route('/scan/tesseract', methods=['GET'])
+    def scan_by_route_with_tesseract_path():
+        path_img = request.args['url']
+        tesseract_path = request.args['tesseract_path']
+        img = cv2.imread(path_img)
+        parse_result = parse_scan_dict(img, tesseract_path)
+        return jsonify(parse_result)
 
     @app.route('/scan', methods=['GET'])
     def scan_by_route():
         path_img = request.args['url']
-        tesseract_path = request.args['tesseract_path']
         img = cv2.imread(path_img)
-        parse_result = parse_scan_dict(img)
+        parse_result = parse_scan_dict(img, '')
         return jsonify(parse_result)
 
     return app
