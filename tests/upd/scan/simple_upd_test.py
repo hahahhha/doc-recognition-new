@@ -5,7 +5,7 @@ import time
 import json
 import os
 
-from src.upd.scan.ocr_result import OcrResult
+from src.ocr_result import OcrResult
 from src.upd.scan.parse_header import parse_header_to_dict
 
 

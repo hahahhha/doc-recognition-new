@@ -1,11 +1,10 @@
 import cv2
 import pytesseract
 import numpy as np
-from skimage.util import img_as_int
 
 from .parse_header import parse_header_to_dict
 from .parse_table import parse_table_to_cells_list
-from .ocr_result import OcrResult
+from src.ocr_result import OcrResult
 
 
 def get_tesseract_ocr_result(img: np.ndarray) -> OcrResult:

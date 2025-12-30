@@ -1,6 +1,3 @@
-from ocr_result import OcrResult
-
-
 # class FieldTitle:
 #     def __init__(self, field_title: str, ocr_result: OcrResult):
 #         self.field_title = field_title

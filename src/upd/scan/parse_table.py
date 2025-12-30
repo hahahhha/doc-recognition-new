@@ -3,10 +3,8 @@ import cv2
 import numpy as np
 from img2table.ocr import TesseractOCR
 from img2table.document import Image
-from PIL import Image as PILImage
-from io import BytesIO
 
-from .ocr_result import OcrResult
+from src.ocr_result import OcrResult
 
 
 # величина отступа от границы шапки документа и таблицы

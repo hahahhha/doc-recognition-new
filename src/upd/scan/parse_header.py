@@ -1,6 +1,6 @@
 import re
 
-from .ocr_result import OcrResult
+from src.ocr_result import OcrResult
 from .data_parse_object import DataParseObject
 
 EXTEND_BBOX_VALUE = 5
