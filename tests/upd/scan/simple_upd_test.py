@@ -3,6 +3,7 @@ import easyocr
 import pytesseract
 import time
 import json
+import os
 
 from src.upd.scan.ocr_result import OcrResult
 from src.upd.scan.parse_header import parse_header_to_dict
@@ -26,6 +27,11 @@ def get_easyocr_result(image_path: str) -> OcrResult:
 
 
 def get_tesseract_result(image_path):
+    try:
+        os.access(image_path, os.R_OK)
+        print('доступ есть')
+    except Exception as e:
+        print('Нет доступа к файлу', e)
     img = cv2.imread(image_path)
     if img is None:
         raise ValueError(f"Не удалось открыть изображение: {image_path}")
@@ -88,4 +94,4 @@ def test_parse_header(img_path: str) -> None:
     # нашлись только инн\кпп продавца и покупателя
 
 if __name__ == '__main__':
-    test_parse_header('./../../scan_images/upd4_page1.jpg')
+    test_parse_header(r'C:\Users\User\Desktop\prj_test_img\upd1_page1_problem.jpg')
