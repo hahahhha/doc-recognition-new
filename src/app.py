@@ -21,14 +21,14 @@ def create_app() -> Flask:
         path_img = request.args['url']
         tesseract_path = request.args['tesseract_path']
         img = cv2.imread(path_img)
-        parse_result = parse_scan_dict(img, tesseract_path)
+        parse_result = parse_scan_dict(path_img, tesseract_path)
         return jsonify(parse_result)
 
     @app.route('/scan', methods=['GET'])
     def scan_by_route():
         path_img = request.args['url']
         img = cv2.imread(path_img)
-        parse_result = parse_scan_dict(img, '')
+        parse_result = parse_scan_dict(path_img, '')
         return jsonify(parse_result)
 
     return app

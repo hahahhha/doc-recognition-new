@@ -1,8 +1,10 @@
 import cv2
 import pytesseract
 import numpy as np
+from skimage.util import img_as_int
+
 from .parse_header import parse_header_to_dict
-from .parse_table import parse_table_to_dict
+from .parse_table import parse_table_to_cells_list
 from .ocr_result import OcrResult
 
 
@@ -32,13 +34,14 @@ def get_tesseract_ocr_result(img: np.ndarray) -> OcrResult:
     return ocr_result
 
 
-def parse_scan_dict(img: np.ndarray, tesseract_path) -> dict:
+def parse_scan_dict(img_path: str, tesseract_path) -> dict:
     if tesseract_path:
         pytesseract.pytesseract.tesseract_cmd = tesseract_path
+    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     ocr_result = get_tesseract_ocr_result(img)
     result = parse_header_to_dict(ocr_result)
-    result["table"] = parse_table_to_dict(img, ocr_result)
-    print(len(result["table"]), '- cells amount')
+    result["table"] = parse_table_to_cells_list(img_path, ocr_result)
+    # print(len(result["table"]), '- cells amount')
     return result
 
 
