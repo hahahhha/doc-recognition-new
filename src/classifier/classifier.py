@@ -12,7 +12,7 @@ from src.classifier.waybill_regex import WAYBILL_REGEX
 
 
 def check_words_in_ocr_result(ocr_result: OcrResult, regex_words_list):
-    is_word_found = [False] * len(regex_words_list[0])
+    is_word_found = [False] * len(regex_words_list)
 
     for bbox, text, conf in ocr_result:
         for index, word_regexes in enumerate(regex_words_list):
