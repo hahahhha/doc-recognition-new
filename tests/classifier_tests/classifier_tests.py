@@ -32,7 +32,7 @@ def get_tesseract_ocr_result(img: np.ndarray) -> OcrResult:
     return ocr_result
 
 
-class TestClassifier(unittest.TestCase):
+class TestClassifierByOcrResult(unittest.TestCase):
     def __test_type_by_simple_keywords(self, keywords: list[str], expected: DocumentType):
         ocr_result = OcrResult()
         for word in keywords:
