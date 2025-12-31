@@ -33,17 +33,36 @@ def get_tesseract_ocr_result(img: np.ndarray) -> OcrResult:
 
 
 class TestClassifier(unittest.TestCase):
-    def test_simple_upd_case(self):
+    def __test_type_by_simple_keywords(self, keywords: list[str], expected: DocumentType):
         ocr_result = OcrResult()
-        ocr_result.insert([(1, 10), (20, 20)], 'универсальный', 1)
-        ocr_result.insert([(1, 10),( 20, 20)], 'передаточный', 1)
-        expected = DocumentType.UPD
+        for word in keywords:
+            # координаты не играют роли при распознавании типа документа
+            ocr_result.insert(bbox=[(-1, -1), (-1, -1)], text=word, confidence=1)
         actual = get_document_type(ocr_result)
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected, actual,
+                         msg = f'In test_by_simple_keywords expected {expected}, got {actual}')
+
+
+    def test_simple_upd_case(self):
+        self.__test_type_by_simple_keywords(
+            keywords=['универсальный', 'передаточный'],
+            expected=DocumentType.UPD
+        )
+
+    def test_simple_invoice_case(self):
+        self.__test_type_by_simple_keywords(
+            keywords=['счёт', 'фактура'],
+            expected=DocumentType.INVOICE
+        )
+
+    def test_simple_waybill_case(self):
+        self.__test_type_by_simple_keywords(
+            keywords=['товарная', 'накладная'],
+            expected=DocumentType.WAYBILL
+        )
 
     def __test_document_type_by_image_path(self, image_path: str, expected: DocumentType):
         img = cv2.imread(str(image_path))
-        expected = DocumentType.UPD
         actual = get_document_type(get_tesseract_ocr_result(img))
         self.assertEqual(expected, actual)
 
