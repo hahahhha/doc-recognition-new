@@ -55,5 +55,12 @@ class TestClassifierByOcrResult(unittest.TestCase):
         for path in paths:
             self.__test_document_type_by_image_path(str(path), DocumentType.INVOICE)
 
+    def test_waybill_scans_type_recognize(self):
+        names = ['torg1.jpg']
+        paths = [Path(__file__).parent.parent / 'scan_images' / name for name in names]
+        for path in paths:
+            self.__test_document_type_by_image_path(str(path), DocumentType.WAYBILL)
+
+
 if __name__ == '__main__':
     unittest.main()
