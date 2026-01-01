@@ -28,7 +28,7 @@ def get_tesseract_ocr_result(img: np.ndarray) -> OcrResult:
                 [left_x, top_y + data['height'][i]],
             ]
             ocr_result.insert(bbox, text, data['conf'][i])
-
+    # ocr_result.print()
     return ocr_result
 
 
@@ -66,12 +66,17 @@ class TestClassifierByOcrResult(unittest.TestCase):
         actual = get_document_type(get_tesseract_ocr_result(img))
         self.assertEqual(expected, actual)
 
-    def test_upd_scans_recognize(self):
+    def test_upd_scans_type_recognize(self):
         names = ['upd1_page1.jpg', 'upd2_page1.jpg', 'upd4_page1.jpg']
         paths = [Path(__file__).parent.parent / 'scan_images' / name for name in names]
         for path in paths:
             self.__test_document_type_by_image_path(str(path), DocumentType.UPD)
 
+    def test_invoice_scans_type_recognize(self):
+        names = ['schet_factura1.jpg', 'schet_factura2.jpg', 'schet_factura4.jpg']
+        paths = [Path(__file__).parent.parent / 'scan_images' / name for name in names]
+        for path in paths:
+            self.__test_document_type_by_image_path(str(path), DocumentType.INVOICE)
 
 if __name__ == '__main__':
     unittest.main()

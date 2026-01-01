@@ -6,7 +6,7 @@ from src.classifier.types import DocumentType
 # УПД
 from src.classifier.upd_regex import UPD_REGEX
 # Счет-фактура
-from src.classifier.invoice_regex import INVOICE_REGEX
+from src.classifier.invoice_regex import INVOICE_REGEX, SINGLE_WORD_INVOICE_REGEX
 # Торговая накладная
 from src.classifier.waybill_regex import WAYBILL_REGEX
 
@@ -28,7 +28,8 @@ def get_document_type(ocr_result: OcrResult) -> DocumentType:
         return DocumentType.UPD
     elif check_words_in_ocr_result(ocr_result, WAYBILL_REGEX):
         return DocumentType.WAYBILL
-    elif check_words_in_ocr_result(ocr_result, INVOICE_REGEX):
+    elif check_words_in_ocr_result(ocr_result, INVOICE_REGEX) or \
+            check_words_in_ocr_result(ocr_result, SINGLE_WORD_INVOICE_REGEX):
         return DocumentType.INVOICE
     else:
         return DocumentType.UNRECOGNIZED
