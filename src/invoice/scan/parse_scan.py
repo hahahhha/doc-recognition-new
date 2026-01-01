@@ -3,6 +3,8 @@ from src.upd.scan.parse_scan import parse_scan_dict_with_ocr_result as upd_parse
 from src.ocr_result import OcrResult
 
 
+# нужно немного "косметически" доработать возвращаемые данные
+
 def parse_scan_dict(img_path: str, tesseract_path: str) -> dict:
     result = upd_parse_scan_dict(img_path, tesseract_path)
     return result
