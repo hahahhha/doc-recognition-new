@@ -7,6 +7,8 @@ from src.upd.scan.parse_scan import (parse_scan_dict_with_ocr_result
                                      as upd_parse_scan_dict_with_ocr_result)
 from src.invoice.scan.parse_scan import (parse_scan_dict_with_ocr_result
                                          as invoice_parse_scan_dict_with_ocr_result)
+from src.waybill.scan.parse_scan import (parse_scan_dict_with_ocr_result
+                                         as waybill_parse_scan_dict_with_ocr_result)
 
 from scripts.tesseract_ocr_result import get_tesseract_ocr_result
 
@@ -20,7 +22,9 @@ def parse_scan_to_dict(img_path: str, tesseract_path: str = '') -> dict:
         result['document_type'] = 'Универсальный передаточный документ'
         return result
     elif document_type == DocumentType.WAYBILL:
-        return {"msg": "пока не сделано"}
+        result = waybill_parse_scan_dict_with_ocr_result(img_path, ocr_result)
+        result['document_type'] = 'Товарная накладная'
+        return result
     elif document_type == DocumentType.INVOICE:
         result = invoice_parse_scan_dict_with_ocr_result(img_path, ocr_result)
         result['document_type'] = 'Счёт-фактура'
