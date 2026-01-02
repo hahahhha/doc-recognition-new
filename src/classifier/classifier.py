@@ -1,7 +1,7 @@
 import re
 
 from src.ocr_result import OcrResult
-from src.classifier.types import DocumentType
+from src.classifier.document_types import DocumentType
 
 # УПД
 from src.classifier.upd_regex import UPD_REGEX

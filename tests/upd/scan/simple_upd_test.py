@@ -7,6 +7,7 @@ import os
 
 from src.ocr_result import OcrResult
 from src.upd.scan.parse_header import parse_header_to_dict
+from scripts.parse_scan_to_dict import parse_scan_to_dict
 
 
 def parse_and_print_res(ocr_res):
@@ -93,5 +94,8 @@ def test_parse_header(img_path: str) -> None:
     # ocr_result.print(coordinates=True)
     # нашлись только инн\кпп продавца и покупателя
 
+
 if __name__ == '__main__':
-    test_parse_header(r'C:\Users\User\Desktop\prj_test_img\upd1_page1_problem.jpg')
+    # test_parse_header(r'C:\Users\User\Desktop\prj_test_img\upd1_page1_problem.jpg')
+    result = parse_scan_to_dict(r'C:\Users\User\Desktop\prj_test_img\unrecognized.jpg')
+    print(result)

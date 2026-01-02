@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 import logging
 import flask.cli
 from scripts.parse_scan_to_dict import parse_scan_to_dict
@@ -12,8 +12,22 @@ def disable_logging(app):
     logging.getLogger('pytesseract').disabled = True
 
 
+def create_scan_response(img_path: str, tesseract_path: str = ''):
+    parse_result = parse_scan_to_dict(img_path, tesseract_path)
+    doc_type, type_name = parse_result['document_type']
+    parse_result['document_type'] = type_name
+
+    response = make_response(jsonify(parse_result))
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Document-Type'] = str(doc_type).lower()
+    return response
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
+    app.config['JSON_AS_ASCII'] = False
+    app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'
 
     disable_logging(app)
 
@@ -25,13 +39,11 @@ def create_app() -> Flask:
     def scan_by_route_with_tesseract_path():
         path_img = request.args['url']
         tesseract_path = request.args['tesseract_path']
-        parse_result = parse_scan_to_dict(path_img, tesseract_path)
-        return jsonify(parse_result)
+        return create_scan_response(img_path=path_img, tesseract_path=tesseract_path)
 
     @app.route('/scan', methods=['GET'])
     def scan_by_route():
         path_img = request.args['url']
-        parse_result = parse_scan_to_dict(path_img, '')
-        return jsonify(parse_result)
+        return create_scan_response(img_path=path_img)
 
     return app

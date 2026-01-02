@@ -11,3 +11,7 @@ class DocumentType(Enum):
     WAYBILL = auto()
     INVOICE = auto()
     UNRECOGNIZED = auto()
+
+    def __str__(self):
+        return self.name
+

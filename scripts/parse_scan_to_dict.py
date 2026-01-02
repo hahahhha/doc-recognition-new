@@ -1,7 +1,7 @@
 import cv2
 
 from src.classifier import classifier
-from src.classifier.types import DocumentType
+from src.classifier.document_types import DocumentType
 
 from src.upd.scan.parse_scan import (parse_scan_dict_with_ocr_result
                                      as upd_parse_scan_dict_with_ocr_result)
@@ -19,15 +19,17 @@ def parse_scan_to_dict(img_path: str, tesseract_path: str = '') -> dict:
 
     if document_type == DocumentType.UPD:
         result = upd_parse_scan_dict_with_ocr_result(img_path, ocr_result)
-        result['document_type'] = 'Универсальный передаточный документ'
+        result['document_type'] = (DocumentType.UPD, 'Универсальный передаточный документ')
         return result
     elif document_type == DocumentType.WAYBILL:
         result = waybill_parse_scan_dict_with_ocr_result(img_path, ocr_result)
-        result['document_type'] = 'Товарная накладная'
+        result['document_type'] = (DocumentType.WAYBILL, 'Товарная накладная')
         return result
     elif document_type == DocumentType.INVOICE:
         result = invoice_parse_scan_dict_with_ocr_result(img_path, ocr_result)
-        result['document_type'] = 'Счёт-фактура'
+        result['document_type'] = (DocumentType.INVOICE, 'Счёт-фактура')
         return result
     elif document_type == DocumentType.UNRECOGNIZED:
-        return {"msg": "тип документа не распознан (позже будет переделано)"}
+        return {
+            'document_type': (DocumentType.UNRECOGNIZED, 'Не удалось распознать документ')
+        }
