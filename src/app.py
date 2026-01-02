@@ -1,14 +1,21 @@
 from flask import Flask, request, jsonify
-
-# from upd import parse_scan_dict as parse_scan_dict_upd
-# from invoice import parse_scan_dict as parse_scan_dict_invoice
-
-# from upd import parse_scan_dict
+import logging
+import flask.cli
 from scripts.parse_scan_to_dict import parse_scan_to_dict
+
+
+def disable_logging(app):
+    log = logging.getLogger('werkzeug')
+    app.logger.disabled = True
+    log.disabled = True
+    flask.cli.show_server_banner = lambda *args: None
+    logging.getLogger('pytesseract').disabled = True
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
+
+    disable_logging(app)
 
     @app.route('/health', methods=['GET'])
     def health():
