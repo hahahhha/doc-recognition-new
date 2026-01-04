@@ -6,7 +6,7 @@ from src.classifier import DocumentType, get_document_type
 from src.ocr_result import OcrResult
 from pathlib import Path
 
-from scripts.tesseract_ocr_result import get_tesseract_ocr_result
+from project_scripts.tesseract_ocr_result import get_tesseract_ocr_result
 
 
 class TestClassifierByOcrResult(unittest.TestCase):

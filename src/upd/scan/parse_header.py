@@ -3,7 +3,7 @@ import re
 from src.ocr_result import OcrResult
 from src.data_parse_object import DataParseObject
 
-from scripts.bbox_finder import BboxFinder
+from project_scripts.bbox_finder import BboxFinder
 
 EXTEND_BBOX_VALUE = 5
 

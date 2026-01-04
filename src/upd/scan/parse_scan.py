@@ -4,7 +4,7 @@ import pytesseract
 from .parse_header import parse_header_to_dict
 from .parse_table import parse_table_to_cells_list
 from src.ocr_result import OcrResult
-from scripts.tesseract_ocr_result import get_tesseract_ocr_result
+from project_scripts.tesseract_ocr_result import get_tesseract_ocr_result
 
 
 def parse_scan_dict(img_path: str, tesseract_path) -> dict:

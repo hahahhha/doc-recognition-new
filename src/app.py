@@ -1,7 +1,11 @@
 from flask import Flask, request, jsonify, make_response
 import logging
 import flask.cli
-from scripts.parse_scan_to_dict import parse_scan_to_dict
+
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from project_scripts import parse_scan_to_dict
 
 
 def disable_logging(app):

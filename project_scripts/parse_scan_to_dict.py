@@ -10,7 +10,7 @@ from src.invoice.scan.parse_scan import (parse_scan_dict_with_ocr_result
 from src.waybill.scan.parse_scan import (parse_scan_dict_with_ocr_result
                                          as waybill_parse_scan_dict_with_ocr_result)
 
-from scripts.tesseract_ocr_result import get_tesseract_ocr_result
+from project_scripts.tesseract_ocr_result import get_tesseract_ocr_result
 
 def parse_scan_to_dict(img_path: str, tesseract_path: str = '') -> dict:
     img = cv2.imread(img_path)
