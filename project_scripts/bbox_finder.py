@@ -58,7 +58,7 @@ class BboxFinder:
                     continue
                 cur_bbox = found_words_bboxes[i][cur_bbox_ind]
                 next_bbox = found_words_bboxes[i + 1][next_bbox_ind]
-                sum_dist += dist(cur_bbox[0], next_bbox[0])
+                sum_dist += dist(cur_bbox[1], next_bbox[0])
             cur_bbox_seq = [found_words_bboxes[i][index_combination[i]] for i in range(len(index_combination))]
             bbox_sequences.append((
                 cur_bbox_seq,
@@ -66,11 +66,10 @@ class BboxFinder:
             ))
         # ищем подходящую последовательность, сравнивая суммарную длину
         min_dist = min(bbox_sequences, key=lambda s: s[1])[1]
+        available_delta = 0.01 # позже поправить на более подходящую величину
+        return [seq for seq, d in bbox_sequences if abs(d - min_dist) < available_delta], True
 
-        return [seq for seq, d in bbox_sequences if abs(d - min_dist) < 0.0001], True
-
-
-    def find_value_by_title_bbox(self, title_bbox: list) -> str:
+    def find_value_by_title_bbox(self, title_bbox: list, max_delta_x: int = 0) -> str:
         title_right_x = title_bbox[1][0]
         title_top_y = title_bbox[1][1]
         title_bottom_y = title_bbox[2][1]
@@ -82,7 +81,7 @@ class BboxFinder:
             cur_top_y = bbox[0][1]
             cur_bottom_y = bbox[2][1]
             if cur_left_x > title_right_x and cur_top_y >= title_top_y - self.__EXTEND_BBOX_VALUE and cur_bottom_y <= title_bottom_y + self.__EXTEND_BBOX_VALUE:
-                if text not in result and text != ' ':
+                if text not in result and text != ' ' and (max_delta_x != 0 and title_right_x - cur_left_x <= max_delta_x):
                     result.append(text)
 
         return ' '.join(result)

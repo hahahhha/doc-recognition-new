@@ -27,13 +27,14 @@ def find_pair_with_min_dist(first_bboxes, second_bboxes):
 
 
 def find_document_num_and_date(bbox_finder: BboxFinder):
-
-
-    for bbox, text, conf in bbox_finder.ocr_result:
-        pass
-
-
-    return
+    # bbox товарная накладная
+    waybill_bbox = bbox_finder.find_sentence_bbox_sequences(
+        [['товарная'], ['накладная']]
+    )[0]
+    # max_delta_x получена экспериментально :))
+    print(waybill_bbox, 'waybill_bbox')
+    found_values = bbox_finder.find_value_by_title_bbox(waybill_bbox, max_delta_x=400)
+    return found_values
 
 
 def parse_header_to_dict(ocr_result: OcrResult) -> dict:
@@ -42,7 +43,8 @@ def parse_header_to_dict(ocr_result: OcrResult) -> dict:
         extend_bbox_value=EXTEND_BBOX_VALUE,
         data_parse_objects=parse_objects
     )
-    bbox_finder.ocr_result.print()
+    bbox_finder.ocr_result.print(confidence=False, coordinates=True)
     find_document_num_and_date(bbox_finder)
     result = bbox_finder.find_values()
+    result['num_and_date'] = find_document_num_and_date(bbox_finder)
     return result
