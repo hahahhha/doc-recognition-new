@@ -5,6 +5,7 @@ from src.ocr_result import OcrResult
 
 def get_tesseract_ocr_result(img: np.ndarray) -> OcrResult:
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
     data = pytesseract.image_to_data(
         img_rgb,
         lang='rus',
