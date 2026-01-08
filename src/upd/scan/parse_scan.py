@@ -19,5 +19,6 @@ def parse_scan_dict(img_path: str, tesseract_path) -> dict:
 
 def parse_scan_dict_with_ocr_result(img_path: str, ocr_result: OcrResult) -> dict:
     result = parse_header_to_dict(ocr_result)
+    result = parse_header_to_dict(ocr_result)
     result["table"] = parse_table_to_cells_list(img_path, ocr_result)
     return result

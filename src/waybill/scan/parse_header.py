@@ -43,7 +43,6 @@ def parse_header_to_dict(ocr_result: OcrResult) -> dict:
         extend_bbox_value=EXTEND_BBOX_VALUE,
         data_parse_objects=parse_objects
     )
-    bbox_finder.ocr_result.print(confidence=False, coordinates=True)
     find_document_num_and_date(bbox_finder)
     result = bbox_finder.find_values()
     result['num_and_date'] = find_document_num_and_date(bbox_finder)

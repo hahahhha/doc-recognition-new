@@ -5,7 +5,7 @@ from src.data_parse_object import DataParseObject
 
 from project_scripts.bbox_finder import BboxFinder
 
-EXTEND_BBOX_VALUE = 5
+EXTEND_BBOX_VALUE = 10
 
 # основные названия полей для поиска за исключением адресов (их поиск происходит отдельно)
 # для распознавания тессерактом оставляю только одно слово
@@ -24,41 +24,9 @@ ADDRESS_PATTERNS = [r'адрес', r'апрес', r'адрее', r'апрее']
 STATUS_PATTERNS = [r'статус', r'статуе', r'етатуе', r'етатус']
 
 
-# def find_value_by_title_bbox(ocr_result: OcrResult, title_bbox: list) -> str:
-#     title_right_x = title_bbox[1][0]
-#     title_top_y = title_bbox[1][1]
-#     title_bottom_y = title_bbox[2][1]
-#
-#     result = []
-#
-#     for bbox, text, conf in ocr_result:
-#         cur_left_x = bbox[0][0]
-#         cur_top_y = bbox[0][1]
-#         cur_bottom_y = bbox[2][1]
-#         if cur_left_x > title_right_x and cur_top_y >= title_top_y - EXTEND_BBOX_VALUE and cur_bottom_y <= title_bottom_y + EXTEND_BBOX_VALUE:
-#             if text not in result and text != ' ':
-#                 result.append(text)
-#
-#     return ' '.join(result)
-#
-#
-# def find_values(ocr_result: OcrResult) -> dict:
-#     result = dict(zip(
-#         [po.json_field_title for po in parse_objects],
-#         ['not found' for _ in range(len(parse_objects))]
-#     ))
-#
-#     for po in parse_objects:
-#         for bbox, text, conf in ocr_result:
-#             # нашли координаты названия поля
-#             if any(re.search(pat, text, re.IGNORECASE) for pat in po.title_search_patterns):
-#                 result[po.json_field_title] = find_value_by_title_bbox(ocr_result, bbox)
-#                 # print(f'found field: {po.field_title} : {bbox}')
-#     return result
-
-
 def get_consignor_or_consignee_data(parsed_data: dict, key: str) -> dict:
     if key not in parsed_data:
+        print('consign failed')
         return {
             "name": "not found",
             "address": "not found"
@@ -92,12 +60,12 @@ def get_buyer_and_seller_address(ocr_result: OcrResult, bbox_finder: BboxFinder)
     address_title_bboxes.sort(key=lambda b: b[0][1])
     # print(*address_title_bboxes, sep='\n')
     if len(address_title_bboxes) < 2:
+        print('buyer seller faileds')
         return 'not found', 'not found'
 
-    # seller_address = find_value_by_title_bbox(ocr_result, address_title_bboxes[0]).strip()
-    # buyer_address = find_value_by_title_bbox(ocr_result, address_title_bboxes[-1]).strip()
     seller_address = bbox_finder.find_value_by_title_bbox(address_title_bboxes[0]).strip()
     buyer_address = bbox_finder.find_value_by_title_bbox(address_title_bboxes[-1]).strip()
+    print('buyer seller address:', buyer_address, seller_address)
     return buyer_address, seller_address
 
 
@@ -130,6 +98,7 @@ def get_status(ocr_result: OcrResult) -> str:
     status_bboxes = [bbox for bbox, text, c in ocr_result
                    if any(re.search(pat, text, re.IGNORECASE) for pat in STATUS_PATTERNS)]
     if len(status_bboxes) < 1:
+        print('status failed')
         return 'not found'
     # ищем самый лево-верхний
     status_bboxes.sort(key=lambda b: b[0])
@@ -189,4 +158,5 @@ def parse_header_to_dict(ocr_result: OcrResult) -> dict:
         "currency": currency,
         "status": status
     }
+    print(formatted)
     return formatted

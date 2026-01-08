@@ -96,6 +96,7 @@ def test_parse_header(img_path: str) -> None:
 
 
 if __name__ == '__main__':
-    # test_parse_header(r'C:\Users\User\Desktop\prj_test_img\upd1_page1_problem.jpg')
-    result = parse_scan_to_dict(r'C:\Users\User\Desktop\prj_test_img\unrecognized.jpg')
+    test_parse_header(r'C:\Users\User\Desktop\prj_test_img\upd1_page1_problem.jpg')
+    # result = parse_scan_to_dict(r'C:\Users\User\Desktop\prj_test_img\unrecognized.jpg')
+    result = parse_scan_to_dict(r'C:\Users\User\Desktop\prj_test_img\upd1_page1.jpg')
     print(result)
