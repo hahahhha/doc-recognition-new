@@ -5,7 +5,7 @@ import flask.cli
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from project_scripts import parse_scan_to_dict
+from project_scripts.parse_scan_to_dict import parse_scan_to_dict
 
 
 def disable_logging(app):
@@ -33,7 +33,7 @@ def create_app() -> Flask:
     app.config['JSON_AS_ASCII'] = False
     app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'
 
-    disable_logging(app)
+    # disable_logging(app)
 
     @app.route('/health', methods=['GET'])
     def health():
