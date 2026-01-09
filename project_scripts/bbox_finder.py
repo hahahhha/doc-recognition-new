@@ -99,13 +99,14 @@ class BboxFinder:
             cur_left_x = bbox[0][0]
             cur_top_y = bbox[0][1]
             cur_bottom_y = bbox[2][1]
-            if cur_left_x > title_right_x and cur_top_y >= title_top_y - self.__EXTEND_BBOX_VALUE and cur_bottom_y <= title_bottom_y + self.__EXTEND_BBOX_VALUE:
+            if cur_left_x > title_right_x and \
+                    cur_top_y >= title_top_y - self.__EXTEND_BBOX_VALUE and cur_bottom_y <= title_bottom_y + self.__EXTEND_BBOX_VALUE:
                 if text not in result and text != ' ':
                     result.append(text)
 
         return ' '.join(result)
 
-    def find_values(self) -> dict:
+    def find_values_by_parse_objects(self) -> dict:
         result = dict(zip(
             [po.json_field_title for po in self.__parse_objects],
             ['not found' for _ in range(len(self.__parse_objects))]
