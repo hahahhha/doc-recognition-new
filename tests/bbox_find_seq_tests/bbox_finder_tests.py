@@ -18,13 +18,15 @@ class TestBboxFinder(unittest.TestCase):
         ], 'номер', 1)
         bbox_finder = BboxFinder(ocr_result, 5, [])
         expected = [
-            [[375, 475], [487, 475], [487, 493], [375, 493]], # товарная
-            [[491, 475], [614, 475], [614, 493], [491, 493]] # накладная
+            [
+                [[375, 475], [487, 475], [487, 493], [375, 493]], # товарная
+                [[491, 475], [614, 475], [614, 493], [491, 493]] # накладная
+            ]
         ]
         actual, flag = bbox_finder.find_sentence_bbox_sequences(
             [['товарная'], ['накладная']]
         )
-        self.assertListEqual(expected, actual)
+        self.assertEqual(sorted(expected), sorted(actual))
 
     def test_two_sentences_exists(self):
         ocr_result = OcrResult()
@@ -61,6 +63,28 @@ class TestBboxFinder(unittest.TestCase):
         ]
         self.assertEqual(len(expected), len(actual), 'длины не совпали')
         self.assertEqual(sorted(expected), sorted(actual))
+
+    def test_single_bbox_finding(self):
+        bbox1 = [
+            [0, 0],
+            [100, 0],
+            [100, 100],
+            [0, 100]
+        ]
+        bbox2 = [
+            [10, 10],
+            [20, 10],
+            [20, 20],
+            [10, 20]
+        ]
+        actual = BboxFinder.get_single_bbox([bbox1, bbox2])
+        expected = [
+            [0, 0],
+            [100, 0],
+            [100, 100],
+            [0, 100]
+        ]
+        self.assertEqual(expected, actual)
 
 
 if __name__ == '__main__':

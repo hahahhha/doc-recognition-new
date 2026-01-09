@@ -14,27 +14,22 @@ parse_objects = [
     DataParseObject('Основание', ['основание'], 'footing')
 ]
 
-def find_pair_with_min_dist(first_bboxes, second_bboxes):
-    mn_dist = float('inf')
-    result = []
-    for bbox in first_bboxes:
-        for bbox2 in second_bboxes:
-            if dist(bbox[0], bbox2[0]) < mn_dist:
-                result = [bbox, bbox2]
-                mn_dist = dist(bbox[0], bbox2[0])
-
-    return result
-
-
 def find_document_num_and_date(bbox_finder: BboxFinder):
     # bbox товарная накладная
-    # waybill_bbox = bbox_finder.find_sentence_bbox_sequences(
-    #     [['товарная'], ['накладная']]
-    # )[0]
-    #
+    waybill_bboxes_lists, success = bbox_finder.find_sentence_bbox_sequences(
+        [['товарная'], ['накладная']]
+    )
+    if not success:
+        return 'not found'
+    singled_bboxes = []
+    for bbox_list in waybill_bboxes_lists:
+        singled_bboxes.append(BboxFinder.get_single_bbox(bbox_list))
+    title_bbox = min(singled_bboxes, key=lambda bbox: bbox[0][1])
     # print(waybill_bbox, 'waybill_bbox')
-    # found_values = bbox_finder.find_value_by_title_bbox(waybill_bbox, max_delta_x=400)
-    return '...'
+    found_values = bbox_finder.find_value_by_title_bbox(title_bbox)
+    if len(found_values) < 2:
+        return 'not found'
+    return found_values.split()[:2]
 
 
 def parse_header_to_dict(ocr_result: OcrResult) -> dict:
