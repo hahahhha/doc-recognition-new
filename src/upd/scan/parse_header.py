@@ -123,7 +123,7 @@ def parse_header_to_dict(ocr_result: OcrResult) -> dict:
         extend_bbox_value=EXTEND_BBOX_VALUE,
         data_parse_objects=parse_objects
     )
-    result = bbox_finder.find_values()
+    result = bbox_finder.find_values_by_parse_objects()
     seller_inn_kpp = result["seller_inn/kpp"].split('/')
 
     buyer_address, seller_address = get_buyer_and_seller_address(ocr_result, bbox_finder)

@@ -8,7 +8,7 @@ def simple_run(img_path: str):
     img = cv2.imread(img_path)
     ocr_result = get_tesseract_ocr_result(img)
     result = waybill_parse_scan_dict(img_path, ocr_result)
-    print(json.dumps(result, indent=2))
+    print(json.dumps(result, indent=2, ensure_ascii=False))
 
 if __name__ == '__main__':
-    simple_run(r'D:\doc-recognition-new\tests\scan_images\torg1.jpg')
+    simple_run(r'D:\doc-recognition-new\doc-recognition-new\tests\scan_images\torg1.jpg')

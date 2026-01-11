@@ -19,7 +19,22 @@ class BboxFinder:
                 bboxes.append(bbox)
         return bboxes
 
-    def find_sentence_bbox_sequences(self, sentence_word_regexes: list[list[str]]) -> tuple[list[list], bool]:
+    @staticmethod
+    def get_single_bbox(bboxes_list: list[list[list[int]]]) -> list[list[int]]:
+        """Возвращает единый bbox, покрывающий все bbox'ы,
+        переданные в списке - находит "самый" левый верхний, самый правый верхний и т.д."""
+        left_x = min([bbox[0][0] for bbox in bboxes_list])
+        right_x = max([bbox[1][0] for bbox in bboxes_list])
+        top_y = min([bbox[0][1] for bbox in bboxes_list])
+        bottom_y = max([bbox[2][1] for bbox in bboxes_list])
+        return [
+            [left_x, top_y],
+            [right_x, top_y],
+            [right_x, bottom_y],
+            [left_x, bottom_y]
+        ]
+
+    def find_sentence_bbox_sequences(self, sentence_word_regexes: list[list[str]], max_neighbour_words_dist = 10) -> tuple[list[list], bool]:
         """Находит bbox какого-либо набора рядом стоящих слов.
         Возвращает bbox вида [[x_left, y_top], [x_right, y_bottom]] и флаг - успех поиска
         Необходимо в связи с тем, что tesseract настроен на считывание отдельных слов, но не словосочетаний.
@@ -58,16 +73,20 @@ class BboxFinder:
                     continue
                 cur_bbox = found_words_bboxes[i][cur_bbox_ind]
                 next_bbox = found_words_bboxes[i + 1][next_bbox_ind]
+                # проверка на то, что слова слишком далеко друг от друга, такое не подходит
+                if dist(cur_bbox[1], next_bbox[0]) > max_neighbour_words_dist:
+                    break
                 sum_dist += dist(cur_bbox[1], next_bbox[0])
-            cur_bbox_seq = [found_words_bboxes[i][index_combination[i]] for i in range(len(index_combination))]
-            bbox_sequences.append((
-                cur_bbox_seq,
-                sum_dist
-            ))
+            # если цикл не разу не прерывался, значит все слова находятся на допустимом расстоянии
+            else:
+                cur_bbox_seq = [found_words_bboxes[i][index_combination[i]] for i in range(len(index_combination))]
+                bbox_sequences.append((
+                    cur_bbox_seq,
+                    sum_dist
+                ))
         # ищем подходящую последовательность, сравнивая суммарную длину
-        min_dist = min(bbox_sequences, key=lambda s: s[1])[1]
-        available_delta = 0.01 # позже поправить на более подходящую величину
-        return [seq for seq, d in bbox_sequences if abs(d - min_dist) < available_delta], True
+        # min_dist = min(bbox_sequences, key=lambda s: s[1])[1]
+        return [seq for seq, d in bbox_sequences], True
 
     def find_value_by_title_bbox(self, title_bbox: list) -> str:
         title_right_x = title_bbox[1][0]
@@ -80,13 +99,14 @@ class BboxFinder:
             cur_left_x = bbox[0][0]
             cur_top_y = bbox[0][1]
             cur_bottom_y = bbox[2][1]
-            if cur_left_x > title_right_x and cur_top_y >= title_top_y - self.__EXTEND_BBOX_VALUE and cur_bottom_y <= title_bottom_y + self.__EXTEND_BBOX_VALUE:
+            if cur_left_x > title_right_x and \
+                    cur_top_y >= title_top_y - self.__EXTEND_BBOX_VALUE and cur_bottom_y <= title_bottom_y + self.__EXTEND_BBOX_VALUE:
                 if text not in result and text != ' ':
                     result.append(text)
 
         return ' '.join(result)
 
-    def find_values(self) -> dict:
+    def find_values_by_parse_objects(self) -> dict:
         result = dict(zip(
             [po.json_field_title for po in self.__parse_objects],
             ['not found' for _ in range(len(self.__parse_objects))]
