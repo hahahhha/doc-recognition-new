@@ -4,6 +4,9 @@ import flask.cli
 
 import sys
 import os
+
+from src.classifier import DocumentType
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from project_scripts.parse_scan_to_dict import parse_scan_to_dict
 
@@ -24,7 +27,7 @@ def create_scan_response(img_path: str, tesseract_path: str = ''):
     response = make_response(jsonify(parse_result))
     response.headers['Content-Type'] = 'application/json; charset=utf-8'
     response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Document-Type'] = str(doc_type).lower()
+    response.headers['Document-Type'] = str(doc_type).lower() if doc_type != DocumentType.WAYBILL else 'torg12'
     return response
 
 
