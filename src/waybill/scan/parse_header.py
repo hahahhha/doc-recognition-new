@@ -11,7 +11,7 @@ parse_objects = [
     # DataParseObject('Грузополучатель', ['грузополучатель'], 'receiver'),
     DataParseObject('Поставщик', ['поставщик'], 'supplier'),
     DataParseObject('Плательщик', ['плательщик'], 'payer'),
-    DataParseObject('Основание', ['основание'], 'footing')
+    DataParseObject('Основание', ['основание'], 'basis')
 ]
 
 def find_document_num_and_date(bbox_finder: BboxFinder) -> tuple:
@@ -32,7 +32,7 @@ def find_document_num_and_date(bbox_finder: BboxFinder) -> tuple:
     return found_values.split()[0], found_values.split()[1]
 
 
-def find_basis(bbox_finder: BboxFinder) -> dict:
+def find_contract(bbox_finder: BboxFinder) -> dict:
     basis = {
         "number": "not found", # example: "7788/УЕ"
         "date": "not found",
@@ -52,39 +52,122 @@ def find_basis(bbox_finder: BboxFinder) -> dict:
     return basis
 
 
-def find_contract(bbox_finder: BboxFinder) -> dict:
-    contract = {
-        "number": "not found", # example: "7788/УЕ"
-        "date": "not found",
+def parse_basis(line: str) -> dict:
+    result = {
+        "number": "not found",
+        "date": "not found"
+    }
+    pattern = r'(\d+[\/\\]?[A-ZА-ЯЁ\/\\]*\d*[A-ZА-ЯЁ]*) от (\d{1,2})\.(\d{1,2})\.(\d{4})'
+
+    match = re.search(pattern, line)
+
+    if match:
+        result["number"] = match.group(1)
+
+        day = match.group(2).zfill(2)  # Добавляем ведущий ноль при необходимости
+        month = match.group(3).zfill(2)  # Добавляем ведущий ноль при необходимости
+        year = match.group(4)
+
+        result["date"] = f"{year}-{month}-{day}"
+
+    return result
+
+
+# def find_contract(bbox_finder: BboxFinder) -> dict:
+#     contract = {
+#         "number": "not found", # example: "7788/УЕ"
+#         "date": "not found",
+#     }
+#
+#     number_found_bboxes = bbox_finder.find_all_matching_bboxes(['номер'])
+#     date_found_bboxes = bbox_finder.find_all_matching_bboxes(['дата'])
+#
+#     number_found_bboxes.sort(key=lambda bbox: (-bbox[0][0], bbox[0][1]))
+#     date_found_bboxes.sort(key=lambda bbox: (-bbox[0][0], bbox[0][1]))
+#
+#     rightest_bottom_number_bbox = number_found_bboxes[0]
+#     rightest_bottom_date_bbox = date_found_bboxes[0]
+#
+#     contract["number"] = bbox_finder.find_value_by_title_bbox(rightest_bottom_number_bbox)
+#     contract["date"] = bbox_finder.find_value_by_title_bbox(rightest_bottom_date_bbox)
+#     return contract
+
+
+def parse_organization_data(data_string: str) -> dict:
+    result = {
+        "name": "",
+        "inn": "",
+        "kpp": "",
+        "address": "",
+        "bankAccount": "",
+        "bankName": "",
+        "bik": "",
+        "correspondentAccount": ""
     }
 
-    number_found_bboxes = bbox_finder.find_all_matching_bboxes(['номер'])
-    date_found_bboxes = bbox_finder.find_all_matching_bboxes(['дата'])
+    # Извлекаем ИНН (10 или 12 цифр)
+    inn_match = re.search(r'ИНН\s+(\d{10,12})', data_string)
+    if inn_match:
+        result["inn"] = inn_match.group(1)
 
-    number_found_bboxes.sort(key=lambda bbox: (-bbox[0][0], bbox[0][1]))
-    date_found_bboxes.sort(key=lambda bbox: (-bbox[0][0], bbox[0][1]))
+    # Извлекаем название организации (от начала строки до ИНН)
+    if inn_match:
+        name_part = data_string[:inn_match.start()].strip()
+        # Убираем запятую в конце, если есть
+        name_part = name_part.rstrip(',')
+        result["name"] = name_part
 
-    rightest_bottom_number_bbox = number_found_bboxes[0]
-    rightest_bottom_date_bbox = date_found_bboxes[0]
+    # Извлекаем КПП (6 цифр, может быть после ИНН или адреса)
+    kpp_match = re.search(r'КПП\s+(\d{9})', data_string)
+    if not kpp_match:
+        # Ищем 9 цифр после запятой или пробела
+        kpp_match = re.search(r',\s*(\d{9})\s*,', data_string)
+    if kpp_match:
+        result["kpp"] = kpp_match.group(1)
 
-    contract["number"] = bbox_finder.find_value_by_title_bbox(rightest_bottom_number_bbox)
-    contract["date"] = bbox_finder.find_value_by_title_bbox(rightest_bottom_date_bbox)
-    return contract
+    # Извлекаем адрес (между КПП и р/с или ИНН и р/с)
+    # Сначала попробуем найти по паттерну "р/с" или "расчетный счет"
+    bank_acc_match = re.search(r'р/с\s+(\d{20})', data_string)
+    if not bank_acc_match:
+        bank_acc_match = re.search(r'расчетный счет\s+(\d{20})', data_string)
 
+    if bank_acc_match:
+        # Адрес - это текст между КПП (или ИНН если нет КПП) и р/с
+        start_idx = inn_match.end() if inn_match else 0
+        if kpp_match:
+            start_idx = kpp_match.end()
 
-def parse_receiver(line: str) -> dict:
-    receiver = {
-        "name": "ООО \"Торговый дом \"Комплексный\"",
-        "inn": "7799434926",
-        "kpp": "121170",
-        "address": "Москва г, Кутузовский пр-кт, дом № 1/7, строение 2",
-        "bankAccount": "40702810399994349242",
-        "bankName": "ПАО СБЕРБАНК",
-        "bik": "044525225",
-        "correspondentAccount": "30101810400000000225"
-    }
+        # Ищем текст до "р/с" или "в банке"
+        end_match = re.search(r'(р/с|в банке)', data_string[start_idx:])
+        if end_match:
+            address_part = data_string[start_idx:start_idx + end_match.start()].strip()
+            # Чистим адрес от лишних запятых
+            address_part = address_part.strip(', ')
+            # Убираем возможные индексы в начале
+            address_part = re.sub(r'^\d{6}\s*,?\s*', '', address_part)
+            result["address"] = address_part
 
-    return receiver
+    # Извлекаем расчетный счет
+    if bank_acc_match:
+        result["bankAccount"] = bank_acc_match.group(1)
+
+    # Извлекаем название банка (после "в банке" или "банке")
+    bank_match = re.search(r'в банке\s+([^,]+)', data_string)
+    if bank_match:
+        result["bankName"] = bank_match.group(1).strip()
+
+    # Извлекаем БИК
+    bik_match = re.search(r'БИК\s+(\d{9})', data_string)
+    if bik_match:
+        result["bik"] = bik_match.group(1)
+
+    # Извлекаем корр счет (после "к/с")
+    corr_match = re.search(r'к/с\s+(\d{20})', data_string)
+    if corr_match:
+        result["correspondentAccount"] = corr_match.group(1)
+
+    return result
+
 
 def parse_header_to_dict(ocr_result: OcrResult) -> dict:
     bbox_finder = BboxFinder(
@@ -93,13 +176,16 @@ def parse_header_to_dict(ocr_result: OcrResult) -> dict:
         data_parse_objects=parse_objects
     )
     find_document_num_and_date(bbox_finder)
-    result = bbox_finder.find_values_by_parse_objects()
-    # result = dict()
+    parsed = bbox_finder.find_values_by_parse_objects()
+    result = dict()
     doc_num, doc_date = find_document_num_and_date(bbox_finder)
     result["documentNumber"] = doc_num
     result["documentDate"] = doc_date
 
-    result["basis"] = find_basis(bbox_finder)
+    result["basis"] = parse_basis(parsed['basis'])
     # находит автоматически из-за большого EXTENDED_BBOX_VALUE, может быть ошибка потенциально
     result["contract"] = find_contract(bbox_finder)
+
+    result["supplier"] = parse_organization_data(parsed['supplier'])
+    result['payer'] = parse_organization_data(parsed['payer'])
     return result

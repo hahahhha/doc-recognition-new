@@ -36,7 +36,7 @@ def create_app() -> Flask:
     app.config['JSON_AS_ASCII'] = False
     app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'
 
-    disable_logging(app)
+    # disable_logging(app)
 
     @app.route('/health', methods=['GET'])
     def health():
