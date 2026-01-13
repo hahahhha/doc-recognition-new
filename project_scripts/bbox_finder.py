@@ -88,19 +88,20 @@ class BboxFinder:
         # min_dist = min(bbox_sequences, key=lambda s: s[1])[1]
         return [seq for seq, d in bbox_sequences], True
 
-    def find_value_by_title_bbox(self, title_bbox: list) -> str:
+    def find_value_by_title_bbox(self, title_bbox: list, special_extend_bbox_value: int = -1) -> str:
         title_right_x = title_bbox[1][0]
         title_top_y = title_bbox[1][1]
         title_bottom_y = title_bbox[2][1]
 
         result = []
+        extend_value = self.__EXTEND_BBOX_VALUE if special_extend_bbox_value == -1 else special_extend_bbox_value
 
         for bbox, text, conf in self.__ocr_result:
             cur_left_x = bbox[0][0]
             cur_top_y = bbox[0][1]
             cur_bottom_y = bbox[2][1]
             if cur_left_x > title_right_x and \
-                    cur_top_y >= title_top_y - self.__EXTEND_BBOX_VALUE and cur_bottom_y <= title_bottom_y + self.__EXTEND_BBOX_VALUE:
+                    cur_top_y >= title_top_y - extend_value and cur_bottom_y <= title_bottom_y + extend_value:
                 if text not in result and text != ' ':
                     result.append(text)
 
