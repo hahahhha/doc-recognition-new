@@ -7,8 +7,6 @@ from src.data_parse_object import DataParseObject
 EXTEND_BBOX_VALUE = 20
 
 parse_objects = [
-    # есть несколько слов грузополучатель, поэтому убрал
-    # DataParseObject('Грузополучатель', ['грузополучатель'], 'receiver'),
     DataParseObject('Поставщик', ['поставщик'], 'supplier'),
     DataParseObject('Плательщик', ['плательщик'], 'payer'),
     DataParseObject('Основание', ['основание'], 'basis')
@@ -47,8 +45,13 @@ def find_contract(bbox_finder: BboxFinder) -> dict:
     rightest_top_number_bbox = number_found_bboxes[0]
     rightest_top_date_bbox = date_found_bboxes[0]
 
-    basis["number"] = bbox_finder.find_value_by_title_bbox(rightest_top_number_bbox)
-    basis["date"] = bbox_finder.find_value_by_title_bbox(rightest_top_date_bbox)
+    basis["number"] = bbox_finder.find_value_by_title_bbox(rightest_top_number_bbox, special_extend_bbox_value=6)
+    date_splitted = (bbox_finder
+                     .find_value_by_title_bbox(rightest_top_date_bbox, special_extend_bbox_value=6)
+                     .split('.'))
+    if len(date_splitted) >= 3:
+        day, month, year = date_splitted[:3]
+        basis["date"] = f'{year}-{month}-{day}'
     return basis
 
 
@@ -71,26 +74,6 @@ def parse_basis(line: str) -> dict:
         result["date"] = f"{year}-{month}-{day}"
 
     return result
-
-
-# def find_contract(bbox_finder: BboxFinder) -> dict:
-#     contract = {
-#         "number": "not found", # example: "7788/УЕ"
-#         "date": "not found",
-#     }
-#
-#     number_found_bboxes = bbox_finder.find_all_matching_bboxes(['номер'])
-#     date_found_bboxes = bbox_finder.find_all_matching_bboxes(['дата'])
-#
-#     number_found_bboxes.sort(key=lambda bbox: (-bbox[0][0], bbox[0][1]))
-#     date_found_bboxes.sort(key=lambda bbox: (-bbox[0][0], bbox[0][1]))
-#
-#     rightest_bottom_number_bbox = number_found_bboxes[0]
-#     rightest_bottom_date_bbox = date_found_bboxes[0]
-#
-#     contract["number"] = bbox_finder.find_value_by_title_bbox(rightest_bottom_number_bbox)
-#     contract["date"] = bbox_finder.find_value_by_title_bbox(rightest_bottom_date_bbox)
-#     return contract
 
 
 def parse_organization_data(data_string: str) -> dict:
@@ -169,6 +152,18 @@ def parse_organization_data(data_string: str) -> dict:
     return result
 
 
+def find_receiver(bbox_finder: BboxFinder) -> dict:
+    receiver_bboxes = bbox_finder.find_all_matching_bboxes(['грузополучатель'])
+    if not receiver_bboxes:
+        # возвращается словарь с пустыми полями
+        return parse_organization_data('')
+
+    toppest_receiver_bbox = min(receiver_bboxes, key=lambda bbox: bbox[0][0])
+    receiver_line = bbox_finder.find_value_by_title_bbox(toppest_receiver_bbox)
+
+    return parse_organization_data(receiver_line)
+
+
 def parse_header_to_dict(ocr_result: OcrResult) -> dict:
     bbox_finder = BboxFinder(
         ocr_result=ocr_result,
@@ -183,9 +178,11 @@ def parse_header_to_dict(ocr_result: OcrResult) -> dict:
     result["documentDate"] = doc_date
 
     result["basis"] = parse_basis(parsed['basis'])
-    # находит автоматически из-за большого EXTENDED_BBOX_VALUE, может быть ошибка потенциально
+
     result["contract"] = find_contract(bbox_finder)
 
     result["supplier"] = parse_organization_data(parsed['supplier'])
     result['payer'] = parse_organization_data(parsed['payer'])
+    result['receiver'] = find_receiver(bbox_finder)
+
     return result
