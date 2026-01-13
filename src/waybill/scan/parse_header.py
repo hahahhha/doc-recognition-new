@@ -87,7 +87,8 @@ def parse_organization_data(data_string: str) -> dict:
         "bik": "",
         "correspondentAccount": ""
     }
-
+    if not data_string:
+        return result
     # Извлекаем ИНН (10 или 12 цифр)
     inn_match = re.search(r'ИНН\s+(\d{10,12})', data_string)
     if inn_match:
@@ -164,6 +165,40 @@ def find_receiver(bbox_finder: BboxFinder) -> dict:
     return parse_organization_data(receiver_line)
 
 
+def find_sender(bbox_finder: BboxFinder) -> dict:
+    # ищет в области выше "организация-грузоотправитель" и левее правой границы самого верхнего "БИК"
+    # самая верхняя организация
+    sender_regexes = ['организация*грузо']
+    sender_bboxes = bbox_finder.find_all_matching_bboxes(sender_regexes)
+
+    bik_regexes = ['бик']
+    bik_bboxes = bbox_finder.find_all_matching_bboxes(bik_regexes)
+
+    if not sender_bboxes:
+        # возвращается словарь с пустыми полями
+        return parse_organization_data('')
+
+    toppest_sender_bbox = min(sender_bboxes, key=lambda bbox: bbox[0][1])
+
+    if not bik_bboxes:
+        sender_line = bbox_finder.find_values_in_area(y_bottom=toppest_sender_bbox[0][1])
+        return parse_organization_data(sender_line)
+
+    toppest_bik_bbox = min(bik_bboxes, key=lambda bbox: bbox[0][1])
+
+    if toppest_bik_bbox[0][1] > toppest_sender_bbox[1][1]:
+        # оказался ниже, т.е. нужный бик не найден
+        sender_line = bbox_finder.find_values_in_area(y_bottom=toppest_sender_bbox[0][1])
+        return parse_organization_data(sender_line)
+
+    sender_line = bbox_finder.find_values_in_area(
+        x_right=toppest_bik_bbox[1][0] + 120, # с запасом
+        y_bottom=toppest_sender_bbox[0][1]
+    )
+
+    return parse_organization_data(sender_line)
+
+
 def parse_header_to_dict(ocr_result: OcrResult) -> dict:
     bbox_finder = BboxFinder(
         ocr_result=ocr_result,
@@ -184,5 +219,6 @@ def parse_header_to_dict(ocr_result: OcrResult) -> dict:
     result["supplier"] = parse_organization_data(parsed['supplier'])
     result['payer'] = parse_organization_data(parsed['payer'])
     result['receiver'] = find_receiver(bbox_finder)
+    result['sender'] = find_sender(bbox_finder)
 
     return result

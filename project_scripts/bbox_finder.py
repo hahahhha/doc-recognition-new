@@ -13,6 +13,7 @@ class BboxFinder:
         self.__parse_objects = data_parse_objects.copy()
 
     def find_all_matching_bboxes(self, to_find_regexes: list) -> list:
+        """Находит все подходящие bbox'ы под хотя бы один regex"""
         bboxes = []
         for bbox, text, conf in self.__ocr_result:
             if any(re.search(pat, text, re.IGNORECASE) for pat in to_find_regexes):
@@ -89,6 +90,7 @@ class BboxFinder:
         return [seq for seq, d in bbox_sequences], True
 
     def find_value_by_title_bbox(self, title_bbox: list, special_extend_bbox_value: int = -1) -> str:
+        """Находит значение по bbox'у названия поля - берет просто весь текст правее на том же уровне y, как и title_bbox"""
         title_right_x = title_bbox[1][0]
         title_top_y = title_bbox[1][1]
         title_bottom_y = title_bbox[2][1]
@@ -108,6 +110,7 @@ class BboxFinder:
         return ' '.join(result)
 
     def find_values_by_parse_objects(self) -> dict:
+        """Позволяет применить методы find_value_by_title_bbox к каждому объекту parse_objects"""
         result = dict(zip(
             [po.json_field_title for po in self.__parse_objects],
             ['not found' for _ in range(len(self.__parse_objects))]
@@ -120,6 +123,18 @@ class BboxFinder:
                     result[po.json_field_title] = self.find_value_by_title_bbox(bbox)
                     # print(f'found field: {po.field_title} : {bbox}')
         return result
+
+
+    def find_values_in_area(self, *, x_left = -1, x_right = 10**9, y_top = -1, y_bottom = 10**9, sep=' '):
+        """Позволяет найти текст в заданной области (по умолчанию поиск происходит по всей области"""
+        result = []
+
+        for bbox, text, conf in self.__ocr_result:
+            left_top_p, right_top_p, right_bottom_p, left_bottom_p = bbox
+            if left_top_p[0] >= x_left and right_top_p[0] <= x_right:
+                if left_top_p[1] >= y_top and left_bottom_p[1] <= y_bottom:
+                    result.append(text)
+        return sep.join(result)
 
 
     @property
