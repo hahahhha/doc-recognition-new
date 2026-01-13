@@ -1,5 +1,6 @@
 import unittest
 
+from project_scripts import bbox_finder
 from src.ocr_result import OcrResult
 from project_scripts.bbox_finder import BboxFinder
 
@@ -23,7 +24,7 @@ class TestBboxFinder(unittest.TestCase):
                 [[491, 475], [614, 475], [614, 493], [491, 493]] # накладная
             ]
         ]
-        actual, flag = bbox_finder.find_sentence_bbox_sequences(
+        actual, flag = bbox_finder.find_sentence_bbox_sequences_with_success(
             [['товарная'], ['накладная']]
         )
         self.assertEqual(sorted(expected), sorted(actual))
@@ -48,7 +49,7 @@ class TestBboxFinder(unittest.TestCase):
             1
         )
         bbox_finder = BboxFinder(ocr_result, 10, [])
-        actual, flag = bbox_finder.find_sentence_bbox_sequences(
+        actual, flag = bbox_finder.find_sentence_bbox_sequences_with_success(
             [['товарная'], ['накладная']]
         )
         expected = [
@@ -84,6 +85,32 @@ class TestBboxFinder(unittest.TestCase):
             [100, 100],
             [0, 100]
         ]
+        self.assertEqual(expected, actual)
+
+    def test_two_first_words_and_one_second_case(self):
+        ocr_result = OcrResult()
+        ocr_result.insert(
+            [[259, 753], [327, 753], [327, 768], [259, 768]],
+            'Товарная', 1)
+        ocr_result.insert(
+            [[333, 756], [409, 756], [409, 767], [333, 767]],
+            'накладная', 1
+        )
+        ocr_result.insert(
+            [[379, 479], [485, 479], [485, 493], [379, 493]],
+            'ТОВАРНАЯ',
+            1
+        )
+        expected = [
+            [
+                [[259, 753], [327, 753], [327, 768], [259, 768]],
+                [[333, 756], [409, 756], [409, 767], [333, 767]]
+            ]
+        ]
+        bbox_finder = BboxFinder(ocr_result, 10, [])
+        actual, flag = bbox_finder.find_sentence_bbox_sequences_with_success(
+            [['товарная'], ['накладная']]
+        )
         self.assertEqual(expected, actual)
 
 

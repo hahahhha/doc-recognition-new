@@ -11,4 +11,4 @@ def simple_run(img_path: str):
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 if __name__ == '__main__':
-    simple_run(r'D:\doc-recognition-new\doc-recognition-new\tests\scan_images\torg1.jpg')
+    simple_run(r'D:\doc-recognition-new\tests\scan_images\torg1.jpg')

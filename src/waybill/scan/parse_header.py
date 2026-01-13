@@ -14,7 +14,7 @@ parse_objects = [
 
 def find_document_num_and_date(bbox_finder: BboxFinder) -> tuple:
     # bbox товарная накладная
-    waybill_bboxes_lists, success = bbox_finder.find_sentence_bbox_sequences(
+    waybill_bboxes_lists, success = bbox_finder.find_sentence_bbox_sequences_with_success(
         [['товарная'], ['накладная']]
     )
     if not success:

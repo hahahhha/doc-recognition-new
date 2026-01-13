@@ -35,7 +35,7 @@ class BboxFinder:
             [left_x, bottom_y]
         ]
 
-    def find_sentence_bbox_sequences(self, sentence_word_regexes: list[list[str]], max_neighbour_words_dist = 10) -> tuple[list[list], bool]:
+    def find_sentence_bbox_sequences_with_success(self, sentence_word_regexes: list[list[str]], max_neighbour_words_dist = 15) -> tuple[list[list], bool]:
         """Находит bbox какого-либо набора рядом стоящих слов.
         Возвращает bbox вида [[x_left, y_top], [x_right, y_bottom]] и флаг - успех поиска
         Необходимо в связи с тем, что tesseract настроен на считывание отдельных слов, но не словосочетаний.
@@ -69,9 +69,9 @@ class BboxFinder:
                 next_bbox_ind = index_combination[i + 1]
                 # проверяем, может ли быть такой индекс в принципе
                 if cur_bbox_ind >= len(found_words_bboxes[i]):
-                    continue
+                    break
                 if next_bbox_ind >= len(found_words_bboxes[i + 1]):
-                    continue
+                    break
                 cur_bbox = found_words_bboxes[i][cur_bbox_ind]
                 next_bbox = found_words_bboxes[i + 1][next_bbox_ind]
                 # проверка на то, что слова слишком далеко друг от друга, такое не подходит
