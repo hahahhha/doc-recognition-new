@@ -1,12 +1,10 @@
 import cv2
-import numpy as np
-import pytesseract
 import unittest
 from src.classifier import DocumentType, get_document_type
 from src.ocr_result import OcrResult
 from pathlib import Path
 
-from project_scripts.tesseract_ocr_result import get_tesseract_ocr_result
+from src.project_scripts.tesseract_ocr_result import get_tesseract_ocr_result
 
 
 class TestClassifierByOcrResult(unittest.TestCase):

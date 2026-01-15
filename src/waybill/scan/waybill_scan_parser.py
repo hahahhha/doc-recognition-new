@@ -12,8 +12,8 @@ def parse_scan_dict_with_ocr_result(img_path: str, ocr_result: OcrResult) -> dic
 
 
 class WaybillScanParser(ScanParser):
-    def parse_header(self):
-        return
+    def parse_header(self, ocr_result: OcrResult) -> dict:
+        return parse_header_to_dict(ocr_result)
 
-    def parse_table(self):
-        return
+    def parse_table(self, img_path: str, ocr_result: OcrResult) -> list:
+        return parse_table_to_cells_list(img_path, ocr_result)

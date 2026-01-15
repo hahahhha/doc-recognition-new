@@ -1,12 +1,10 @@
 import cv2
-import numpy as np
 import tempfile, os
-from PIL import Image as PILImage
 from img2table.ocr import TesseractOCR
 from img2table.document import Image
 
-from project_scripts.bbox_finder import BboxFinder
-from project_scripts.extract_table_cells import extract_table_cells_to_list
+from src.project_scripts.bbox_finder import BboxFinder
+from src.project_scripts.extract_table_cells import extract_table_cells_to_list
 from src.ocr_result import OcrResult
 
 EXTEND_BBOX_VALUE = 10

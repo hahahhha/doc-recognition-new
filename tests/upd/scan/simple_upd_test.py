@@ -7,7 +7,7 @@ import os
 
 from src.ocr_result import OcrResult
 from src.upd.scan.parse_header import parse_header_to_dict
-from project_scripts.parse_scan_to_dict import parse_scan_to_dict
+from src.project_scripts.parse_scan_to_dict import parse_scan_to_dict
 
 
 def parse_and_print_res(ocr_res):

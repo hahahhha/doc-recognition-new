@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.classifier import DocumentType
 
 
-from project_scripts.parse_scan_to_dict import parse_scan_to_dict
+from src.project_scripts.parse_scan_to_dict import parse_scan_to_dict
 
 
 def disable_logging(app):

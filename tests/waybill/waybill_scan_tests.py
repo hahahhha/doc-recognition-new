@@ -2,7 +2,7 @@ import json
 import cv2
 from src.waybill.scan.parse_scan import parse_scan_dict_with_ocr_result as waybill_parse_scan_dict
 
-from project_scripts.tesseract_ocr_result import get_tesseract_ocr_result
+from src.project_scripts.tesseract_ocr_result import get_tesseract_ocr_result
 
 def simple_run(img_path: str):
     img = cv2.imread(img_path)

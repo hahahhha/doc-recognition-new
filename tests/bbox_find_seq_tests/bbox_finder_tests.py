@@ -1,8 +1,7 @@
 import unittest
 
-from project_scripts import bbox_finder
 from src.ocr_result import OcrResult
-from project_scripts.bbox_finder import BboxFinder
+from src.project_scripts import BboxFinder
 
 class TestBboxFinder(unittest.TestCase):
     def test_simple_bbox_sequences_finding(self):

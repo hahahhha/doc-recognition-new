@@ -1,5 +1,5 @@
 import re
-from project_scripts.bbox_finder import BboxFinder
+from src.project_scripts.bbox_finder import BboxFinder
 from src.ocr_result import OcrResult
 from src.data_parse_object import DataParseObject
 
