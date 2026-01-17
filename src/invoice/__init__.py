@@ -1,1 +1,1 @@
-from .scan.parse_scan import parse_scan_dict
+# from .scan.parse_scan import parse_scan_dict
