@@ -59,6 +59,10 @@ class TestClassifierByOcrResult(unittest.TestCase):
         for path in paths:
             self.__test_document_type_by_image_path(str(path), DocumentType.WAYBILL)
 
+    def test_invoice_zipped(self):
+        name = 'schet-zip.jpg'
+        path = Path(__file__).parent.parent / 'scan_images' / name
+        self.__test_document_type_by_image_path(path, DocumentType.INVOICE)
 
 if __name__ == '__main__':
     unittest.main()

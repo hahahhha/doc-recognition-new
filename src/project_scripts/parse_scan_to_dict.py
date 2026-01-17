@@ -15,6 +15,11 @@ from src.project_scripts.tesseract_ocr_result import get_tesseract_ocr_result
 def parse_scan_to_dict(img_path: str, tesseract_path: str = '') -> dict:
     img = cv2.imread(img_path)
     ocr_result = get_tesseract_ocr_result(img)
+
+
+    # ocr_result.print()
+
+
     document_type = classifier.get_document_type(ocr_result)
 
     if document_type == DocumentType.UPD:
