@@ -48,7 +48,8 @@ def parse_table_to_cells_list(img_path: str, ocr_result: OcrResult) -> list[dict
                                                   min_confidence=50)
 
             if not extracted_tables:
-                raise Exception("Не удалось распознать таблицу в документе")
+                print("Не удалось распознать таблицу в документе")
+                return []
             cells_list = extract_table_cells_to_list(extracted_tables[0])
 
         finally:

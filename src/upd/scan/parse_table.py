@@ -16,7 +16,7 @@ def find_table_top_border(ocr_result: OcrResult):
     currency_bboxes = [bbox for bbox, text, c in ocr_result if re.search('валюта', text, re.IGNORECASE)]
     if not currency_bboxes:
         print('Не удалось распознать таблицу')
-        raise Exception("Не удалось найти ключевое слово Валюта для парсинга таблицы")
+        return -1
     currency_bbox = currency_bboxes[0]
     border_y = currency_bbox[2][1] # получил Y правого нижнего угла
     return border_y + border_extend_value
@@ -36,7 +36,8 @@ def draw_table(cells: list[dict]):
 
 def parse_table_to_cells_list(img_path: str, ocr_result: OcrResult) -> list[dict]:
     border_y = find_table_top_border(ocr_result)
-
+    if border_y == -1:
+        return []
     ocr = TesseractOCR(n_threads=1, lang="rus")
     doc = Image(img_path)
     extracted_tables = doc.extract_tables(ocr=ocr,
@@ -46,7 +47,7 @@ def parse_table_to_cells_list(img_path: str, ocr_result: OcrResult) -> list[dict
                                           min_confidence=50)
     if not extracted_tables:
         print('Не удалось распознать таблицу')
-        raise Exception("Не удалось распознать таблицу в документе")
+        return []
     found_table = extracted_tables[0]
     cells_list = []
     for id_row, row in enumerate(found_table.content.values()):
